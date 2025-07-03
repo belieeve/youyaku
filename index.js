@@ -33,7 +33,7 @@ app.get('/summarize', async (req, res) => {
     }
 
     // 3. Summarize using Gemini Pro
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const prompt = `以下の文章を日本語で1行で要約してください。
 
 ${article.textContent}`;
