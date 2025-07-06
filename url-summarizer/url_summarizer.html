@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL要約サービス</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL要約サービス</h1>
+        
+        <div class="input-group">
+            <label for="url">URLを入力してください：</label>
+            <input type="url" id="url" placeholder="https://example.com" required>
+        </div>
+        
+        <button onclick="summarizeUrl()">要約を取得</button>
+        
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function summarizeUrl() {
+            const urlInput = document.getElementById('url');
+            const resultDiv = document.getElementById('result');
+            const button = document.querySelector('button');
+            
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('URLを入力してください');
+                return;
+            }
+            
+            // URLの形式チェック
+            try {
+                new URL(url);
+            } catch (e) {
+                alert('正しいURLを入力してください');
+                return;
+            }
+            
+            // ローディング表示
+            resultDiv.innerHTML = '<div class="loading">要約を取得中...</div>';
+            resultDiv.style.display = 'block';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<strong>要約:</strong> ${data.summary}`;
+                    resultDiv.className = 'result';
+                } else {
+                    resultDiv.innerHTML = `<strong>エラー:</strong> ${data.error}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>エラー:</strong> サーバーとの通信に失敗しました`;
+                resultDiv.className = 'result error';
+            } finally {
+                button.disabled = false;
+            }
+        }
+        
+        // Enterキーでも実行できるようにする
+        document.getElementById('url').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                summarizeUrl();
+            }
+        });
+    </script>
+</body>
+</html>
