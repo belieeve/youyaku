@@ -2,6 +2,10 @@ const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 
 exports.handler = async (event, context) => {
+  console.log('=== Function started ===');
+  console.log('Method:', event.httpMethod);
+  console.log('Body:', event.body);
+  
   // CORSヘッダーを設定
   const headers = {
     'Access-Control-Allow-Origin': '*',
