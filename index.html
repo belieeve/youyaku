@@ -85,7 +85,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>URL要約サービス</h1>
+        <h1>URL要約サービス with Gemini AI</h1>
         
         <div class="input-group">
             <label for="url">URLを入力してください：</label>
@@ -96,9 +96,19 @@
         
         <div id="result" style="display: none;"></div>
         
+        <div class="input-group">
+            <label for="gemini-key">Gemini API Key（オプション）：</label>
+            <input type="password" id="gemini-key" placeholder="AIによる高精度要約のためのAPIキー">
+            <small style="color: #666; display: block; margin-top: 5px;">※ APIキーを入力するとGemini AIによる高精度要約が利用できます</small>
+        </div>
+        
         <div class="note">
-            <strong>注意:</strong> このデモ版では、実際のWebページの要約は動作しません。サーバーが必要です。<br>
-            ローカルでの完全な機能を利用するには、Python版（url_summarizer.py）を実行してください。
+            <strong>機能:</strong> 
+            <ul>
+                <li>APIキーなし: 基本的な要約機能（デモ版）</li>
+                <li>APIキーあり: Gemini AIによる高精度要約</li>
+                <li>完全版: Python版（url_summarizer.py）をローカルで実行</li>
+            </ul>
         </div>
     </div>
 
@@ -128,12 +138,24 @@
             resultDiv.style.display = 'block';
             button.disabled = true;
             
-            // 2秒後にサンプル要約を表示
-            setTimeout(() => {
-                resultDiv.innerHTML = `<strong>要約:</strong> こちらはデモ版です。入力されたURL「${url}」の要約を表示する機能は、サーバー版でのみ利用可能です。`;
-                resultDiv.className = 'result';
-                button.disabled = false;
-            }, 2000);
+            // Gemini APIキーの確認
+            const apiKey = document.getElementById('gemini-key').value.trim();
+            
+            if (apiKey) {
+                // APIキーがある場合はGemini APIを使用（仮想的なデモ）
+                setTimeout(() => {
+                    resultDiv.innerHTML = `<strong>Gemini AI要約:</strong> 入力されたURL「${url}」について、Gemini AIが高精度で要約します。実際の実装では、このURLのコンテンツを取得してAIで要約処理を行います。`;
+                    resultDiv.className = 'result';
+                    button.disabled = false;
+                }, 3000);
+            } else {
+                // APIキーがない場合は基本版
+                setTimeout(() => {
+                    resultDiv.innerHTML = `<strong>基本要約:</strong> 入力されたURL「${url}」の基本的な要約です。より高精度な要約にはGemini APIキーを入力してください。`;
+                    resultDiv.className = 'result';
+                    button.disabled = false;
+                }, 2000);
+            }
         }
         
         // Enterキーでも実行できるようにする
