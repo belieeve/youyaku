@@ -1,4 +1,5 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const fetch = require('node-fetch');
+const cheerio = require('cheerio');
 
 exports.handler = async (event, context) => {
   // CORSヘッダーを設定
@@ -76,13 +77,29 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-    // 要約を生成
+    // Gemini APIに直接リクエスト
     const prompt = `以下のWebページの内容を日本語で50文字以内で簡潔に要約してください:\n\n${content}`;
-    const result = await model.generateContent(prompt);
-    const summary = result.response.text().trim();
+    
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }]
+      })
+    });
+
+    if (!geminiResponse.ok) {
+      throw new Error(`Gemini API Error: ${geminiResponse.status}`);
+    }
+
+    const geminiData = await geminiResponse.json();
+    const summary = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'AI要約を生成できませんでした';
 
     return {
       statusCode: 200,
