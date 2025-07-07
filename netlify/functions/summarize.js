@@ -53,7 +53,6 @@ exports.handler = async (event, context) => {
     }
 
     // HTMLからテキストを抽出（Node.js環境用）
-    const cheerio = require('cheerio');
     const $ = cheerio.load(data.contents);
     
     // 不要な要素を削除
@@ -69,11 +68,12 @@ exports.handler = async (event, context) => {
 
     // Gemini APIの設定
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log('API Key check:', apiKey ? 'あり' : 'なし');
     if (!apiKey) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: 'Gemini APIキーが設定されていません' }),
+        body: JSON.stringify({ error: 'Gemini APIキーが設定されていません。Netlifyの環境変数を確認してください。' }),
       };
     }
 
@@ -108,11 +108,14 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('詳細エラー:', error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: `要約処理中にエラーが発生しました: ${error.message}` }),
+      body: JSON.stringify({ 
+        error: `要約処理中にエラーが発生しました: ${error.message}`,
+        details: error.stack
+      }),
     };
   }
 };
