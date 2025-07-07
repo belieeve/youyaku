@@ -4,7 +4,8 @@
   "description": "URL要約サービス with Gemini AI",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Build complete'"
+    "build": "echo 'Build complete'",
+    "postinstall": "echo 'Dependencies installed'"
   },
   "dependencies": {
     "node-fetch": "^2.6.7",
