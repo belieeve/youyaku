@@ -109,85 +109,29 @@
     </div>
 
     <script>
-        // 組み込みGemini APIキー（開発者が設定）
-        const GEMINI_API_KEY = 'SECURITY_DISABLED_API_KEY'; // セキュリティ上の理由で無効化済み
-        
-        // Gemini AIを使用してURL要約を実行
-        async function summarizeWithGemini(url, resultDiv) {
+        // Netlify Functionsを使用してURL要約を実行
+        async function summarizeWithNetlifyFunction(url, resultDiv) {
             try {
-                // URLのコンテンツを取得（CORS回避のためプロキシ使用）
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                
-                if (!data.contents) {
-                    throw new Error('ページのコンテンツを取得できませんでした');
-                }
-                
-                // HTMLからテキストを抽出
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
-                
-                // 不要な要素を削除
-                const elementsToRemove = doc.querySelectorAll('script, style, nav, header, footer, aside');
-                elementsToRemove.forEach(el => el.remove());
-                
-                // タイトルとメインコンテンツを取得
-                const title = doc.querySelector('title')?.textContent || '';
-                const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-                const headings = Array.from(doc.querySelectorAll('h1, h2, h3')).map(h => h.textContent).join(' ');
-                const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => p.textContent).join(' ');
-                
-                const content = `${title} ${metaDescription} ${headings} ${paragraphs}`.substring(0, 2000);
-                
-                // APIキーが設定されていない場合のフォールバック
-                if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-                    // フォールバック: 基本的な要約
-                    let summary = '';
-                    if (metaDescription && metaDescription.length > 20) {
-                        summary = metaDescription;
-                    } else if (title && title.length > 10) {
-                        summary = title;
-                    } else {
-                        const firstParagraph = doc.querySelector('p')?.textContent || '';
-                        summary = firstParagraph.substring(0, 150);
-                    }
-                    
-                    if (!summary) {
-                        summary = 'このページの内容を要約できませんでした。';
-                    }
-                    
-                    const cleanSummary = summary.replace(/\s+/g, ' ').trim();
-                    const finalSummary = cleanSummary.length > 100 ? cleanSummary.substring(0, 100) + '...' : cleanSummary;
-                    
-                    resultDiv.innerHTML = `<strong>スマート要約:</strong> ${finalSummary}<br><small style="color: #666;">※ 開発者はGemini APIキーを設定してください</small>`;
-                    resultDiv.className = 'result';
-                    return;
-                }
-                
-                // Gemini APIに送信
-                const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                // Netlify Functionsエンドポイントに送信
+                const response = await fetch('/.netlify/functions/summarize', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `以下のWebページの内容を日本語で50文字以内で簡潔に要約してください:\n\n${content}`
-                            }]
-                        }]
-                    })
+                    body: JSON.stringify({ url: url })
                 });
                 
-                if (!geminiResponse.ok) {
-                    throw new Error(`Gemini API エラー: ${geminiResponse.status}`);
+                if (!response.ok) {
+                    throw new Error(`サーバーエラー: ${response.status}`);
                 }
                 
-                const geminiData = await geminiResponse.json();
-                const summary = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '要約を生成できませんでした';
+                const data = await response.json();
                 
-                resultDiv.innerHTML = `<strong>Gemini AI要約:</strong> ${summary.trim()}`;
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                resultDiv.innerHTML = `<strong>Gemini AI要約:</strong> ${data.summary.trim()}`;
                 resultDiv.className = 'result';
                 
             } catch (error) {
@@ -221,8 +165,8 @@
             button.disabled = true;
             
             try {
-                // Gemini AIで要約を実行
-                await summarizeWithGemini(url, resultDiv);
+                // Netlify Functionsで要約を実行
+                await summarizeWithNetlifyFunction(url, resultDiv);
             } catch (error) {
                 resultDiv.innerHTML = `<strong>エラー:</strong> ${error.message}`;
                 resultDiv.className = 'result error';
