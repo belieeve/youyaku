@@ -72,17 +72,21 @@ python url-summarizer/url_summarizer.py
 
 ## 使用方法
 
-### Webデモ版
+### 一般利用者
 1. https://belieeve.github.io/youyaku/ にアクセス
 2. URLを入力
-3. （オプション）Gemini APIキーを入力してAI要約を有効化
-4. 「要約を取得」ボタンをクリック
+3. 「要約を取得」ボタンをクリック
+4. Gemini AIが自動で高精度要約を生成
 
-### ローカル完全版
+### 開発者（デプロイ・カスタマイズ）
+1. リポジトリをフォーク
+2. `SETUP.md` の手順に従ってGemini APIキーを設定
+3. GitHub Pagesでデプロイ
+
+### ローカル開発版
 1. 上記のインストール手順に従って環境構築
-2. Gemini APIキーを環境変数に設定
-3. Pythonサーバーを起動
-4. 高精度AI要約機能が利用可能
+2. Pythonサーバーを起動
+3. ローカルで開発・テスト
 
 ## ライセンス
 
