@@ -96,75 +96,36 @@
         
         <div id="result" style="display: none;"></div>
         
-        <div class="input-group">
-            <label for="gemini-key">Gemini API Key（オプション）：</label>
-            <input type="password" id="gemini-key" placeholder="AIによる高精度要約のためのAPIキー">
-            <small style="color: #666; display: block; margin-top: 5px;">※ APIキーを入力するとGemini AIによる高精度要約が利用できます</small>
-        </div>
-        
         <div class="note">
             <strong>使用方法:</strong> 
             <ul>
                 <li>1. URLを入力</li>
-                <li>2. Gemini API キーを入力（<a href="https://makersuite.google.com/app/apikey" target="_blank">取得はこちら</a>）</li>
-                <li>3. 「要約を取得」ボタンをクリック</li>
-                <li>※ APIキーは必須です（高精度AI要約のため）</li>
+                <li>2. 「要約を取得」ボタンをクリック</li>
+                <li>3. AIが自動で高精度要約を生成</li>
             </ul>
+            <p style="color: #28a745; font-weight: bold;">✨ Gemini AIが自動で高精度要約を実行します</p>
         </div>
     </div>
 
     <script>
-        // Gemini APIを使用してURL要約を実行
-        async function summarizeWithGemini(url, apiKey, resultDiv) {
+        // サーバーレス関数を使用してURL要約を実行
+        async function summarizeWithAPI(url, resultDiv) {
             try {
-                // まずURLのコンテンツを取得（CORS回避のためプロキシ使用）
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                
-                if (!data.contents) {
-                    throw new Error('ページのコンテンツを取得できませんでした');
-                }
-                
-                // HTMLからテキストを抽出
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
-                
-                // 不要な要素を削除
-                const elementsToRemove = doc.querySelectorAll('script, style, nav, header, footer, aside');
-                elementsToRemove.forEach(el => el.remove());
-                
-                // タイトルとメインコンテンツを取得
-                const title = doc.querySelector('title')?.textContent || '';
-                const metaDescription = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
-                const headings = Array.from(doc.querySelectorAll('h1, h2, h3')).map(h => h.textContent).join(' ');
-                const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => p.textContent).join(' ');
-                
-                const content = `${title} ${metaDescription} ${headings} ${paragraphs}`.substring(0, 2000);
-                
-                // Gemini APIに送信
-                const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+                const response = await fetch('/.netlify/functions/summarize', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `以下のWebページの内容を日本語で50文字以内で簡潔に要約してください:\\n\\n${content}`
-                            }]
-                        }]
-                    })
+                    body: JSON.stringify({ url })
                 });
                 
-                if (!geminiResponse.ok) {
-                    throw new Error(`Gemini API エラー: ${geminiResponse.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTPエラー: ${response.status}`);
                 }
                 
-                const geminiData = await geminiResponse.json();
-                const summary = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '要約を生成できませんでした';
-                
-                resultDiv.innerHTML = `<strong>Gemini AI要約:</strong> ${summary.trim()}`;
+                const data = await response.json();
+                resultDiv.innerHTML = `<strong>AI要約:</strong> ${data.summary}`;
                 resultDiv.className = 'result';
                 
             } catch (error) {
@@ -198,19 +159,8 @@
             button.disabled = true;
             
             try {
-                // Gemini APIキーの確認
-                const apiKey = document.getElementById('gemini-key').value.trim();
-                
-                if (apiKey) {
-                    // Gemini APIを使用して高精度要約
-                    await summarizeWithGemini(url, apiKey, resultDiv);
-                } else {
-                    // APIキーがない場合はエラー表示
-                    resultDiv.innerHTML = '<strong>エラー:</strong> Gemini APIキーが必要です。<br><small>APIキーの取得方法: <a href="https://makersuite.google.com/app/apikey" target="_blank">https://makersuite.google.com/app/apikey</a></small>';
-                    resultDiv.className = 'result error';
-                    button.disabled = false;
-                    return;
-                }
+                // サーバーレス関数でAI要約を実行
+                await summarizeWithAPI(url, resultDiv);
             } catch (error) {
                 resultDiv.innerHTML = `<strong>エラー:</strong> ${error.message}`;
                 resultDiv.className = 'result error';

@@ -1,0 +1,21 @@
+{
+  "name": "url-summarizer",
+  "version": "1.0.0",
+  "description": "URL要約サービス with Gemini AI",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Build complete'"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "keywords": [
+    "url",
+    "summary", 
+    "gemini",
+    "ai"
+  ],
+  "author": "belieeve",
+  "license": "MIT"
+}
